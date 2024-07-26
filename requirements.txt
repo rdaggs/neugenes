@@ -1,0 +1,8 @@
+pandas
+opencv-python-headless
+numpy
+Pillow
+scipy
+matplotlib
+DeepSlice
+allensdk
