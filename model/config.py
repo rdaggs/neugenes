@@ -1,7 +1,7 @@
 import os
 
 # directories
-root_directory = '/Users/riley/Desktop/NeuGenes/Models/model'
+root_directory = '/Your/Root/Directory/Here'
 output_directory = os.path.join(root_directory,'model')
 
 # AllenSDK routing
@@ -27,11 +27,6 @@ def id_to_name(id):
 
 def id_to_acronymn(id):
     return tree.get_structures_by_name([f'{name_map[id]}'])[0]['acronym']
-
-
-
-# test dataset path 
-
 
 
 
