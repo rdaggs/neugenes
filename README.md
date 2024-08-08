@@ -20,7 +20,7 @@ Update the setuptools
 pip install --upgrade setuptools
 ```
 
-Run the following command to install the domain-exploration library:
+Run the following command to install the neugenes library:
 
 ```bash
 pip install -e .
@@ -31,10 +31,11 @@ pip install -e .
 Run
 ```bash
 python main.py fit [--data DATA_MODULE] [--data.domain DOMAIN] [--model MODEL]
+python -u main.py [--dir DATASET_DIRECTORY] [--structures BLA,PVT,SCN.....]
 ```
 
 for instance:
 
 ```bash
-python main.py fit --data MNISTDataModule --data.domain pixel --model MLP_MNIST
+python -u main.py fit --data Npsr1-cre_Ai14 --structures BLA,PVT,SCN,HPF,NTm,ENTmv,PAR,POST,PRE,SUB
 ```
