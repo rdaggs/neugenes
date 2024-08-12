@@ -25,7 +25,7 @@ Run the following command to install the neugenes library:
 ```bash
 pip install -e .
 ```
-unzip resolution_25.zip --> quicker way to access structures
+unzip resolution_25.zip for access to structures
 
 ## Inference
 
