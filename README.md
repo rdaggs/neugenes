@@ -28,7 +28,7 @@ pip install -e .
 
 Download preliminary structures
 ```bash
-unzip resolution_25.zip -d model/mcc/annotation/ccf_2017/structure_masks
+unzip resolution_25.zip -d (config.root_dir)/model/mcc/annotation/ccf_2017/structure_masks
 ```
 
 
