@@ -25,7 +25,12 @@ Run the following command to install the neugenes library:
 ```bash
 pip install -e .
 ```
-unzip resolution_25.zip for access to structures
+
+Download preliminary structures
+```bash
+unzip resolution_25.zip -d model/mcc/annotation/ccf_2017/structure_masks
+```
+
 
 ## Inference
 
