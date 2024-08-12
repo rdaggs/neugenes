@@ -26,16 +26,16 @@ Run the following command to install the neugenes library:
 pip install -e .
 ```
 
-## Training
+## Inference
 
 Run
 ```bash
-python main.py fit [--data DATA_MODULE] [--data.domain DOMAIN] [--model MODEL]
 python -u main.py [--dir DATASET_DIRECTORY] [--structures BLA,PVT,SCN.....]
 ```
 
 for instance:
 
 ```bash
-python -u main.py fit --data Npsr1-cre_Ai14 --structures BLA,PVT,SCN,HPF,NTm,ENTmv,PAR,POST,PRE,SUB
+python -u main.py fit --data Npsr1-cre_Ai14 --structures BLA,PVT,SCN,HPF,NTm,ENTmv,PAR,POST,PRE,SUB.....
 ```
+
