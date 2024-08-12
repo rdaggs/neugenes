@@ -28,7 +28,7 @@ pip install -e .
 
 Download preliminary structures
 ```bash
-unzip resolution_25.zip -d config.mask_zip_file
+unzip resolution_25.zip -d model.config.mask_zip_file
 ```
 
 
