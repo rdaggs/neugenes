@@ -1,1 +1,10 @@
+├── images
+│   ├── brain_slice_1.png 
+│   ├── brain_slice_2.png     
+│   ├── brain_slice_3.png
+│   ├── brain_slice_4.png
+│   ...
+│   ├── brain_slice_n.png
 
+# please ensure all images are taken from same brain 
+# deepslice alignment generation is reliant on that
