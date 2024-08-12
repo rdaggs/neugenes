@@ -9,11 +9,13 @@ from allensdk.core.mouse_connectivity_cache import MouseConnectivityCache
 manifest_file_path = os.path.join(root_directory,'mcc/mouse_connectivity_manifest.json')
 annotation_file_path = os.path.join(root_directory,'mcc/annotation/ccf_2017/structure_masks/resolution_25')
 mask_weights = os.path.join(root_directory,'mcc/mask_weights.json')
+mask_zip_file = os.path.join(root_directory,'mcc/annotation/ccf_2017/structure_masks')
 mcc = MouseConnectivityCache(manifest_file=manifest_file_path, resolution=25)
 reference_space =  mcc.get_reference_space()
 tree = mcc.get_structure_tree()
 acronym_map = tree.value_map(lambda x: x['id'], lambda y: y['acronym'])
 name_map = tree.get_name_map() 
+
 
 
 
