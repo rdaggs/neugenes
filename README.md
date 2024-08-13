@@ -17,6 +17,7 @@ pip install --upgrade pip
 
 Update the setuptools
 ```bash
+# if errors arise with pip, try this
 pip install --upgrade setuptools
 ```
 
