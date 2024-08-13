@@ -37,7 +37,7 @@ Some of the image cleaning and preprocessing is handled internally.
 The output of standard nikon microscopy equipment (xx.nd2) is not supported yet so you'll need
 to process and save as tiff, jpeg, png etc.
 ```bash
-python -u flag_bad_scans.py
+python model.flag_bad_scans.py
 ```
 Watch for bad scans 
 Some of the contour in the cell expression can be lost 
