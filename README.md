@@ -30,6 +30,7 @@ pip install -e .
 Download preliminary structures
 ```bash
 unzip resolution_25.zip -d model.config.mask_zip_file
+# alternatively, you can just wait and let processing interface with the API for downloading the structures
 ```
 
 ## Data Preprocessing
