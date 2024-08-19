@@ -1,4 +1,3 @@
-# @polarbean on GitHub -- Included for demonstrative purposes :)
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input
@@ -256,3 +255,6 @@ def get_image_size(fname):
         else:
             raise Exception(f"Invalid filetype: {head}")
         return width, height
+
+
+# Thanks to @polarbean on GitHub -- network architecture included for demonstrative purposes :)
