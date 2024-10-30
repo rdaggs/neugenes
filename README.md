@@ -60,7 +60,7 @@ for instance:
 
 ```bash
 python -u main.py fit --data Npsr1-cre_Ai14 --structures BLA,PVT,HPF,LS
-python -u main.py fit --data Npsr1-cre_Ai14 --structures FULL_BRAIN
+python -u main.py fit --data DREADD_m2.7 --structures FULL_BRAIN
 
 ```
 
