@@ -62,8 +62,8 @@ python -u main.py [--dir DATASET_DIRECTORY] [--structures BLA,PVT,SCN.....]
 for instance:
 
 ```bash
-python -u main.py fit --data Npsr1-cre_Ai14 --structures BLA,PVT,HPF,LS
-python -u main.py fit --data DREADD_m2.7 --structures FULL_BRAIN
+python -u main.py -u --input_dir Npsr1-cre_Ai14      --structures BLA,PVT,HPF,LS
+python -u main.py -u --input_dir DREADD_m2.7_CONTROL --structures FULL_BRAIN
 
 ```
 
