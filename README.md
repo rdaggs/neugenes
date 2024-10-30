@@ -13,6 +13,9 @@ Then run (we recommend using a python virtual environment)
 
 ```bash
 pip install --upgrade pip
+set -e
+python3.11 -m venv neugenes_processor
+source neugenes_processor/bin/activate
 ```
 
 Update the setuptools
