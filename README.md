@@ -5,7 +5,7 @@ Colocalization analysis, Brain Registration to Allen CCFv3, Protein signaling fo
 
 Clone the repo
 ```bash
-git clone git@github.com:rdaggs/neugenes.git
+git clone https://github.com/rdaggs/neugenes.git
 cd neugenes
 ```
 
