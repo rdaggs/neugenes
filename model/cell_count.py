@@ -11,15 +11,31 @@ from utils import (acronymn_to_id,
                    process_mask,
                    cells_in_ROI,
                    download_overlay)
+
 os.chdir(config.root_directory)
 
+FULL_BRAIN = structures = ['SSp-ll', 'SSp-tr', 'VISC', 'AUDpo', 'VISal', 'VISam', 'VISl', 'VISp', 
+                           'VISpl', 'VISpm', 'VISli', 'VISpor', 'ACAd', 'ACAv', 'PL', 'ILA', 'ORB', 
+                           'VISrl', 'TEa', 'AId', 'AIp', 'AIv', 'RSPagl', 'RSPd', 'RSPv', 'PTLp', 
+                           'PERI', 'ECT', 'TT', 'DP', 'PIR', 'NLOT', 'COA', 'PAA', 'TR', 'HPF', 
+                           'FC', 'ENTl', 'ENTm', 'ENTmv', 'PAR', 'POST', 'PRE', 'SUB', 'ProS', 
+                           'CLA', 'EP', 'LA', 'BMA', 'ACB', 'FS', 'LSc', 'LSr', 'LSv', 'SH', 
+                           'sAMY', 'MEA', 'GPe', 'GPi', 'SI', 'MA', 'NDB', 'BSTa', 'BSTp', 'SPF', 
+                           'PP', 'MG', 'SGN', 'AM', 'AD', 'MD', 'PT', 'RE', 'RH', 'PCN', 'SubG', 
+                           'SO', 'ASO', 'NC', 'PVH', 'ARH', 'ADP', 'AHA', 'MEPO', 'PS', 'SCH', 
+                           'VMH', 'TU', 'ZI', 'VTA', 'RN', 'SOC', 'TRN', 'LDT', 'CN', 'PARN', 
+                           'RPA', 'DN', 'PVT', 'BLA']
 
 def main():
     parser = argparse.ArgumentParser(description='Regional Cell Count of Brain Dataset')
     parser.add_argument('--input_dir', type=str, required=True, help='Input directory containing the png brain scans')
-    parser.add_argument('--structures', nargs='+', required=True, help='List of structure acronyms (e.g., VPL, BLA, PVT)')
+    parser.add_argument('--structures', nargs='+', required=True, help='List of structure acronyms (e.g., VPL, BLA, PVT) or "FULL_BRAIN" to include all currently supported structures')
     args = parser.parse_args()
-    process(args.input_dir, args.structures )
+
+    if args.structures == ['FULL_BRAIN']:
+        args.structures = FULL_BRAIN
+
+    process(args.input_dir, args.structures)
 
 
 def process(base_dir,structure_acronymns,overlay=False):
