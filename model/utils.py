@@ -235,7 +235,7 @@ def process_image(image):
 def dynamic_threshold_value(image):
     min,max = np.min(image),np.max(image)
     # this regression earns 0.91 classification error --> starting place
-    threshold = int((0.94 * max) - 68.13)
+    threshold = int((0.94 * max) - 30.13)
     return threshold
 
 
