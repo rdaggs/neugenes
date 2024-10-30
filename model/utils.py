@@ -5,13 +5,15 @@ import numpy as np
 import nrrd
 import ipywidgets as widgets
 import math
-import config
+import model.config as config
+from PIL import Image
 from scipy.spatial import cKDTree
 import matplotlib.pyplot as plt
 from DeepSlice import DSModel
 from allensdk.core.mouse_connectivity_cache import MouseConnectivityCache
 from allensdk.core.reference_space import ReferenceSpace
 import functools
+from model.data_preprocessing import match_aspect_ratio
 
 from requests.exceptions import HTTPError
 os.chdir(config.root_directory)
@@ -22,17 +24,16 @@ def get_ids():
         structure ids for mask generation
     """
     ac_to_id = {}
-
     with open(config.names_file_path,'r') as file:
         for line in file:
             parts = line.split()
             if len(parts) >= 2:
+
                 acronym = parts[0]
                 structure_number = parts[1]
                 ac_to_id[acronym] = structure_number
     
     return ac_to_id
-
 
 def validate_id(id):
     """
@@ -86,6 +87,31 @@ def acronymn_to_id(structures_ac):
         raise TypeError("Input should be a list of acronyms or a single acronym, not an AllenSDK structure id.")
 
 
+def id_to_acronym(id):
+    """
+    Converts a given ID back into its corresponding acronym using the reverse mapping.
+    
+    Args:
+        id (int): The AllenSDK structure ID to be converted.
+    
+    Returns:
+        acronym (str): The corresponding acronym for the given ID.
+    """
+    ac_to_id = get_ids()
+    id_to_ac = {v: k for k, v in ac_to_id.items()}
+
+    if isinstance(id,list):
+        r = []
+        for x in id:
+            r.append(id_to_ac[x])
+        return r
+
+    elif isinstance(id,int):
+        return id_to_ac[str(id)]
+    
+    elif isinstance(id,str):
+        return id_to_ac[id]
+
 def atlas_registration(dir,ensemble,index_order,index_spacing,section_thickness):
     """
 
@@ -105,10 +131,8 @@ def atlas_registration(dir,ensemble,index_order,index_spacing,section_thickness)
         Returns:
             anchoring: predctions of 9 anchored Allen CCF coordinates for each image in directory
     """
-    ds_path = os.path.abspath(os.path.join(dir, '../../'))
-    os.chdir(ds_path)
     model = DSModel('mouse')
-    
+
     # section thickness 
     if section_thickness: 
         model.predict(dir, ensemble, section_numbers=True)
@@ -130,7 +154,6 @@ def atlas_registration(dir,ensemble,index_order,index_spacing,section_thickness)
 
 
 def process_image(image):
-
     """
         Gathering the (y,x) location of each expressed cell body in an image 
         for processing against masks 
@@ -143,23 +166,26 @@ def process_image(image):
             activation_locations: a coordinate-wise mapping of each cell 
                                   activation in brain scan
     """
-    
+    if isinstance(image,str):
+        image = cv2.imread(image)
+
+    image = np.array(image)
+
     # functionality to pass in cv2 object
     if not isinstance(image, str):
         image = image
-        img_y,img_x = image.shape[0], image.shape[1]
         img_boxing = image.copy()
     
     # string location of image
-    else:
+    if not isinstance(image,np.ndarray):
+        image = np.array(image)
         image = cv2.imread(image)
-        img_y,img_x = image.shape[0], image.shape[1]
         img_boxing = image.copy()
 
-    
+    # thresholding 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    _, threshold_for_contour = cv2.threshold(gray, 125, 255, cv2.THRESH_TOZERO)
+    threshold_value = dynamic_threshold_value(gray)
+    _, threshold_for_contour = cv2.threshold(gray, threshold_value, 255, cv2.THRESH_TOZERO)
     contours, _ = cv2.findContours(threshold_for_contour, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     activations = []
@@ -170,7 +196,7 @@ def process_image(image):
     
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
-
+        
         if (w > 5 and h > 5) and (w < 60 and h < 60) and len(contour) > 4:
             count += 1
             
@@ -204,6 +230,13 @@ def process_image(image):
     activation_locations = np.array(activation_locations)
 
     return activation_locations 
+
+
+def dynamic_threshold_value(image):
+    min,max = np.min(image),np.max(image)
+    # this regression earns 0.91 classification error --> starting place
+    threshold = int((0.94 * max) - 68.13)
+    return threshold
 
 
 def generate_alignment_matrix(data, filename):
@@ -245,7 +278,7 @@ def generate_target_slice(ouv, atlas):
         Returns:
             regions: slice of given 3d volume according to anchored alignment 
 
-        Thank you to Harry Carey of University of Oslo for this function
+        Thank you to Harry Carey for this function
     """
     width = None
     height = None
@@ -269,7 +302,7 @@ def generate_target_slice(ouv, atlas):
     valid_indices = valid_indices.flatten()
     lxf = lx.flatten()
     lyf = ly.flatten()
-    lzf = lz.flatten()
+    lzf = lz.flatten() 
     valid_lx = lxf[valid_indices]
     valid_ly = lyf[valid_indices]
     valid_lz = lzf[valid_indices]
@@ -288,7 +321,6 @@ def volume_to_registered_slice(alignment, volume):
 
         Returns:
             regions: slice of given 3d volume according to anchored alignment 
-
     """
     
     # anchoring
@@ -441,6 +473,8 @@ def process_mask(structure_id,alignment,image):
         Returns:
             regions: slice of given 3d volume according to anchored alignment 
     """
+    if not isinstance(image,np.ndarray):
+        image = np.asarray(image)
 
     try:
         # generate and refine 3d volume 
@@ -699,3 +733,56 @@ def display_structure_3d(id):
 
     widgets.interact(display_slice, slice_index=(0, data.shape[0] - 1))
 
+
+# function to query last image of tiff stack, save in new directory
+def registration_directory(input_dir,channels):
+    
+    output_dir = f'{input_dir}_register'
+    os.makedirs(output_dir, exist_ok=True)
+    for fn in os.listdir(input_dir):
+        if fn.lower().endswith('.tiff') or fn.lower().endswith('.tif'):
+            
+            fn_path = os.path.join(input_dir, fn)
+            tiff_stack = Image.open(fn_path) # gathering last image in tiff stack, saving
+            path = os.path.join(output_dir,fn.rsplit('.', 1)[0] + '.png')
+            
+            if(os.path.exists(path)):
+                continue
+            
+            image = tiff_stack.seek(len(channels)-1)
+            resized_image = match_aspect_ratio(image, (480, 358))
+            resized_image.save(path, format='PNG')
+    
+    os.chdir(input_dir)
+    return output_dir
+
+
+def process_tiff_stack(filename,channels,alignment,structures):
+    
+    image_result = {}
+    for c, channel in enumerate(channels):
+        channel_result = {}
+        
+        # opening tiff stack
+        tiff_stack = Image.open(filename)
+        tiff_stack.verify()
+        tiff_stack = Image.open(filename)
+        tiff_stack.seek(c)
+
+        # resize to match registration
+        resized_image = match_aspect_ratio(tiff_stack, (480, 358))
+        cell_yx = process_image(resized_image)
+
+        for id in structures:
+            ac = id_to_acronym(id)
+            _, mask_yx, _ = process_mask(id, alignment, resized_image)
+            _, count = cells_in_ROI(mask_yx, cell_yx, threshold=9)
+            channel_result[ac] = count
+    
+        image_result[channel] = channel_result
+
+    return {filename.rsplit('.', 1)[0] + '.tif': image_result}
+        
+
+
+   

@@ -3,8 +3,9 @@ import pandas as pd
 import nrrd
 import json
 import numpy as np
-import config
-import utils
+import matplotlib.pyplot as plt
+import model.config as config
+import model.utils as utils
 os.chdir(config.root_directory)
 
 
@@ -42,6 +43,23 @@ def to_csv(data, output_path, acronym_map):
 
     df = pd.DataFrame(rows)
     df.to_csv(output_path, index=False)
+
+def plot_brain_region_histogram(filepath, structures):
+    data = pd.read_csv(filepath)
+    brain_regions = data.columns[1:]
+    region_sums = data[structures].sum()
+    
+    scaled_region_sums = (region_sums / region_sums.max()) * 100
+    sorted_regions = scaled_region_sums.sort_values(ascending=False)
+
+    plt.figure(figsize=(18, 8))
+    plt.bar(sorted_regions.index, sorted_regions.values, color='blue')
+    plt.title('Regional Expression Levels Calibrated', fontsize=14)
+    plt.ylabel('Calibrated Expression Intensity (Scaled to 100)', fontsize=12)
+    plt.xlabel('Brain Region (as defined in Allen CCFv3)', fontsize=12)
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.savefig(filepath.replace(".csv", "") + "_histogram.png")
 
 def update_structure_weights(data):
     """
@@ -118,7 +136,7 @@ def calibrate_expression(data,structure_weights):
             structure_weights: size of each structure in voxels
 
         Returns:
-            CSV containing each images quantification within the ROI 
+            [calibrat3d] output from inference 
     """
     # normalize the weights
     min_val = min(structure_weights.values())
@@ -134,15 +152,10 @@ def calibrate_expression(data,structure_weights):
                 # this transformation is meant to accentuate smaller regions
                 if w != 0:
                     # x[key] = x[key]/(w + 0.27)
-                    x[key] /= w + 0.27
+                    x[key] /= w + 0.05
                 else:
+                    # break if division error is posed 
                     continue
     
     # feedback updated data
     return data
-    
-
-
-
-
-
