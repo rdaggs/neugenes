@@ -21,7 +21,7 @@ Update the setuptools
 pip install --upgrade setuptools
 ```
 
-Run the following command to integrate the neccessary version of tensorflow(dependent on your machine architecture):
+Run the following command to integrate the neccessary version of tensorflow 2.15(dependent on your machine architecture):
 
 ```bash
 pip install tensorflow-2.15.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
