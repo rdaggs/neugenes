@@ -21,10 +21,13 @@ Update the setuptools
 pip install --upgrade setuptools
 ```
 
-Run the following command to install the neugenes library:
+Run the following command to integrate the neccessary version of tensorflow(dependent on your machine architecture):
 
 ```bash
-pip install -e .
+pip install tensorflow-2.15.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+pip install tensorflow-2.15.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl 
+pip install tensorflow-2.15.0-cp310-cp310-macosx_10_15_x86_64.whl
+pip install tensorflow-2.15.0-cp310-cp310-macosx_12_0_arm64.whl 
 ```
 
 Download preliminary structures
