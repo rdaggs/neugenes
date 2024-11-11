@@ -48,7 +48,7 @@ to process and save as tiff, jpeg, png etc.
 ```bash
 python model.flag_bad_scans.py
 ```
-Watch for broken tissue and pay attention to expression brightness. Some of the contour in the cell expression can be lost if you don't adjust contrast/brightness. 
+Watch for broken tissue and pay attention to expression overexposure
 
 
 
