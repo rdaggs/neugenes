@@ -34,7 +34,7 @@ pip install tensorflow-2.15.0-cp310-cp310-macosx_12_0_arm64.whl
 ```
 
 Download preliminary structures
-(or wait and let processor interface directly w/ API for downloading the structures)
+(or wait and let processor interface directly with API for downloading the structures)
 ```bash
 unzip resolution_25.zip -d model.config.mask_zip_file
 
