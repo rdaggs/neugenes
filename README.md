@@ -48,8 +48,13 @@ to process and save as tiff, jpeg, png etc.
 ```bash
 python model.flag_bad_scans.py
 ```
-Watch for broken tissue and pay attention to expression overexposure
-
+```bash
+python model.condition_coronal_correlation.py
+```
+Given you have multiple datasets, condition your dataset to only compare the axially corresponding scans.
+i.e. if coronal axis of brain scans in control = [456,228,....111] and stress = [461,219,....41], this
+alternate preprocessing step can eliminate the final scan for a more precise comparison (given a threshold score
+of your choice)
 
 
 
