@@ -50,7 +50,7 @@ python model.flag_bad_scans.py
 ```
 Given you have multiple datasets, condition your dataset to only compare the axially corresponding scans.
 i.e. if coronal axis of brain scans in control = [456,228,....111] and stress = [461,219,....41], this
-alternate preprocessing step can eliminate the final scan for a more precise comparison (given a threshold score
+alternate preprocessing step can eliminate the final scan for a more precise comparison (given a tolerance
 of your choice)
 ```bash
 python model.condition_coronal_correlation.py
