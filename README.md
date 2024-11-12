@@ -72,4 +72,5 @@ python -u main.py -u --input_dir Npsr1-cre_Ai14      --structures BLA,PVT,HPF,LS
 python -u main.py -u --input_dir DREADD_m2.7_CONTROL --structures FULL_BRAIN
 
 ```
+Please note, FULL_BRAIN requires about 2.5x as much time as LIGHT_BRAIN
 
