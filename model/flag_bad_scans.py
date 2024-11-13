@@ -27,7 +27,7 @@ def flag_scans(input_dir):
             contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             num_bodies = len(contours)
             if num_bodies > 2:
-                print(f"revisit scan titled {fn} and crop extraneous tissue to prevent faults registration ")
+                print(f"revisit scan titled {fn} and crop extraneous tissue to prevent fault in registration ")
 
             if threshold > 220:
                 print(f"revisit scan titled {fn} and adjust exposure so that expression intensity can be recorded more accurately")
