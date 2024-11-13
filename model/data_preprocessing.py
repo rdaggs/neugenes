@@ -22,7 +22,7 @@ def nd2_to_tiff(input_dir):
 
     num = [f for f in os.listdir(input_dir) if f.lower().endswith(('.jpeg', '.tif', '.jpg', '.png'))]  # count
 
-    im_n = 1
+    im_n = 1    
 
     for filename in os.listdir(input_dir):
         if filename.lower().endswith('.tiff') or filename.lower().endswith('.tif'):
@@ -87,7 +87,6 @@ def spaces_in_filenames(directory):
         Args:
             directory: Root directory
     """
-    # fetching images later on requires '_' instead of ' ' in namespace
     for filename in os.listdir(directory):
         new_filename = filename.replace(' ', '_')
         if new_filename != filename:

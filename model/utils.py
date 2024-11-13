@@ -112,7 +112,7 @@ def id_to_acronym(id):
     elif isinstance(id,str):
         return id_to_ac[id]
 
-def atlas_registration(dir,ensemble,index_order,index_spacing,section_thickness):
+def atlas_registration(dir,ensemble=True,index_order=False,index_spacing=False,section_thickness=None):
     """
 
         Args:
@@ -131,29 +131,26 @@ def atlas_registration(dir,ensemble,index_order,index_spacing,section_thickness)
         Returns:
             anchoring: predctions of 9 anchored Allen CCF coordinates for each image in directory
     """
-    model = DSModel('mouse')
+    fn = os.path.join(dir,'results.csv')
+    if os.path.exists(fn): return pd.read_csv(fn)
 
-    # section thickness 
+    model = DSModel('mouse')    
     if section_thickness: 
         model.predict(dir, ensemble, section_numbers=True)
-    
-    if not section_thickness: 
-        model.predict(dir, ensemble, section_numbers=False)
-
+    model.predict(dir, ensemble, section_numbers=False)
     model.propagate_angles()
     
-    if index_order:
+    if index_order: 
         model.enforce_index_order()
-        
-    if index_spacing and section_thickness:
+    if index_spacing and section_thickness: 
         model.enforce_index_spacing(section_thickness)
 
     model.save_predictions(dir + '/results')
-    anchoring = pd.read_csv(os.path.join(dir, 'results.csv')) 
+    anchoring = pd.read_csv(fn) 
     return anchoring
 
 
-def process_image(image):
+def process_image(image, e_size=32):
     """
         Gathering the (y,x) location of each expressed cell body in an image 
         for processing against masks 
@@ -166,6 +163,11 @@ def process_image(image):
             activation_locations: a coordinate-wise mapping of each cell 
                                   activation in brain scan
     """
+    activations = []
+    activation_locations = []
+    count=0
+    if e_size % 2 != 0: e_size+=1
+
     if isinstance(image,str):
         image = cv2.imread(image)
 
@@ -176,7 +178,7 @@ def process_image(image):
         image = image
         img_boxing = image.copy()
     
-    # string location of image
+    # string location of image (filename)
     if not isinstance(image,np.ndarray):
         image = np.array(image)
         image = cv2.imread(image)
@@ -184,60 +186,78 @@ def process_image(image):
 
     # thresholding 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    threshold_value = dynamic_threshold_value(gray)
-    _, threshold_for_contour = cv2.threshold(gray, threshold_value, 255, cv2.THRESH_TOZERO)
+    threshold = dynamic_threshold_value(gray)
+    _, threshold_for_contour = cv2.threshold(gray, threshold, 255, cv2.THRESH_TOZERO)
     contours, _ = cv2.findContours(threshold_for_contour, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    
-    activations = []
-    activation_locations = []
-    count = 0
 
     # evaluating each activation
-    
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         
         if (w > 5 and h > 5) and (w < 60 and h < 60) and len(contour) > 4:
-            count += 1
-            
             try:
                 ellipse = cv2.fitEllipse(contour)
                 cv2.ellipse(img_boxing, ellipse, (0, 255, 0), 2)
-            
-            except cv2.error as e:
-                print(f"Error fitting ellipse: {e}")
-                continue            
-
+            except cv2.error as e: continue            
             M = cv2.moments(contour)
+            if M['m00'] == 0: continue # avoid division error
             
             # center of activation = activation value 
-            if M['m00'] != 0:  # avoid division by zero
-                centroid_x = int(M['m10'] / M['m00'])
-                centroid_y = int(M['m01'] / M['m00'])
-                activation_value = gray[centroid_y, centroid_x]
-                activations.append(activation_value)
+            c_x = int(M['m10'] / M['m00'])
+            c_y = int(M['m01'] / M['m00'])
+             
+            # capturing image patch with singular expression 
+            L_x, L_y = max(0,int(c_x-e_size/2)),max(0,int(c_y-e_size/2))
+            R_x, R_y = min(image.shape[1],int(c_x+e_size/2)),min(image.shape[0],int(c_y+e_size/2))
+            patch = image[L_y:R_y, L_x:R_x]
 
-                # store coordinates 
-                loc = [centroid_y, centroid_x]
-                activation_locations.append(loc)
-
-            activations.append(activation_value)
-
-            # store coordinates 
-            loc = [centroid_y,centroid_x]
-            activation_locations.append(loc)
-    
-    activation_locations = np.array(activation_locations)
-
-    return activation_locations 
+            gray_patch = cv2.cvtColor(patch, cv2.COLOR_BGR2GRAY)    
+            circularity_score = evaluate_expression_circularity(gray_patch,threshold) # judging expression circularity
+            if circularity_score == 0: continue 
+            
+            # expression location / intensity to data structure 
+            activation_locations.append([c_y, c_x])
+            activations.append(gray[c_y, c_x])
+            count+=1
+            
+    return np.array(activation_locations)
 
 
 def dynamic_threshold_value(image):
-    min,max = np.min(image),np.max(image)
-    # this regression earns 0.91 classification error --> starting place
-    threshold = int((0.94 * max) - 30.13)
+    """
+        Args:
+            image: A brain scan from dataset, having been pre-evaluated
+      
+        Returns:
+            threshold: A regression earning 0.09 classification error to 
+                       determine thresholding value of image 
+    """
+    threshold = int((0.94 * np.max(image)) - 68.13)
+    if threshold < 120: threshold = 130
     return threshold
 
+def evaluate_expression_circularity(patch,threshold):
+    """
+        Args:
+            patch: Given a 10x10 pixel patch, determine 
+
+            filename: filename in dataframe that you want alignment from
+        
+        Returns:
+            alignment: alignment matrix representative of anchoring coordinates in CCF space 
+                       in format [ox,oy......vy,vz]
+    """
+    _, binary_mask = cv2.threshold(patch, threshold, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    if contours:
+        contour = max(contours, key=cv2.contourArea)
+        area = cv2.contourArea(contour)
+        perimeter = cv2.arcLength(contour,True)
+        if perimeter != 0: circularity = (4 * np.pi * area) / (perimeter ** 2)
+        else: circularity = 0
+
+    return circularity
 
 def generate_alignment_matrix(data, filename):
     """
@@ -278,7 +298,7 @@ def generate_target_slice(ouv, atlas):
         Returns:
             regions: slice of given 3d volume according to anchored alignment 
 
-        Thank you to Harry Carey for this function
+        Thank you to Harry Carey for assistance with this function
     """
     width = None
     height = None
@@ -309,6 +329,7 @@ def generate_target_slice(ouv, atlas):
     atlas_slice = atlas[valid_lx,valid_ly,valid_lz]
     data[valid_indices] = atlas_slice
     data_im = data.reshape((height, width))
+    #print(coronal_axis =  oy + (uy/2) + (vy /2) )
     return data_im
 
 
@@ -324,7 +345,7 @@ def volume_to_registered_slice(alignment, volume):
     """
     
     # anchoring
-    Ox, Oy, Oz, Ux, Uy, Uz, Vx, Vy, Vz = alignment
+    Ox,Oy,Oz,Ux,Uy,Uz,Vx,Vy,Vz = alignment
 
     # just for mouse for now should switch to fetch from volume shape
     bounds = [455, 527, 319]
@@ -489,9 +510,7 @@ def process_mask(structure_id,alignment,image):
         volume = np.array(mirrored)
         slice = generate_target_slice(alignment, volume).astype(np.uint8)
         slice_resize = cv2.resize(slice, (image.shape[1], image.shape[0]), interpolation=cv2.INTER_NEAREST)
-            
         cords = np.where(slice_resize)
-
         """ 
                 [[y0,y1,y2...yn-1,yn],[x0,x1,x2...xn-1,xn]] 
                         ↓ ↓ transformation ↓ ↓ 
@@ -719,9 +738,11 @@ def gen_mask(structure_id):
 
 def display_structure_3d(id):
     """ 
-        Given an Allen structure id, return the 
-    
+        Given an Allen structure id, display 3d representation
     """
+    if isinstance(id,str):
+        id = acronymn_to_id(id)
+        print(id)
     structure_id = id
     gen_mask(id)
     path = f'/Users/riley/Desktop/NeuGenes/Models/model/mcc/annotation/ccf_2017/structure_masks/resolution_25/structure_{structure_id}.nrrd'

@@ -124,15 +124,15 @@ def update_structure_weights(data):
     return mask_sums
 
 
-def calibrate_expression(data,structure_weights):
+def calibrate_expression(data,structure_weights,stabilizing_parameter=0.333):
     """
         To calibrate expression density, it is important to consider the
         size of the region when reviewing its cell count. This function takes
-        expression data and returns an adjusted version relative to the size 
-        of each structure
+        expression data and returns an calibrated expression intensity relative 
+        to the size of each structure
 
         Args:
-            data: output of inference model 
+            data: output of inference 
             structure_weights: size of each structure in voxels
 
         Returns:
@@ -141,7 +141,7 @@ def calibrate_expression(data,structure_weights):
     # normalize the weights
     min_val = min(structure_weights.values())
     max_val = max(structure_weights.values())
-    normalized_weights = {key: (value - min_val) / (max_val - min_val) * 1 for key, value in structure_weights.items()}
+    normalized_weights = {key: (value-min_val)/(max_val-min_val) for key, value in structure_weights.items()}
 
     # update expression values
     for x in data:
@@ -149,13 +149,8 @@ def calibrate_expression(data,structure_weights):
             if key.startswith('mask_'):
                 id = ''.join([char for char in key if char.isdigit()])
                 w = normalized_weights[id]
-                # this transformation is meant to accentuate smaller regions
+                # this transformation is meant to accentuate expression in the smaller regions
                 if w != 0:
-                    # x[key] = x[key]/(w + 0.27)
-                    x[key] /= w + 0.05
-                else:
-                    # break if division error is posed 
-                    continue
-    
-    # feedback updated data
+                    x[key] = x[key]/w + stabilizing_parameter
+                else: continue                    
     return data
